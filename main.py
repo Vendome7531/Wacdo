@@ -1,24 +1,18 @@
 from fastapi import FastAPI
-import models # On importe ton fichier models.py
-from database import engine # On importe le moteur de database.py
+from app.database.database import engine, Base
+# Imports explicites pour éviter tout conflit de dossier
+from app.routers.product import router as product_router
+from app.routers.order import router as order_router
 
-# CETTE LIGNE EST LA CLÉ :
-models.Base.metadata.create_all(bind=engine)
-
-app = FastAPI(title="Wacdo API")
-
-
-print('Bienvenue chez Wacdo !')
-
-from fastapi import FastAPI
-from models import ProductSchema # On importe le schéma qu'on a préparé tout à l'heure
+# Création physique des tables dans la DB
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Wacdo API")
+
+# On branche les routes sur l'application
+app.include_router(product_router)
+app.include_router(order_router)
 
 @app.get("/")
-def home():
-    return {"message": "Bienvenue sur l'API de commande Wacdo !"}
-
-@app.get("/status")
-def get_status():
-    return {"status": "Le back-end fonctionne parfaitement"}
+def root():
+    return {"status": "success", "message": "Wacdo est prêt"}
