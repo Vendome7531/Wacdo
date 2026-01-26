@@ -1,16 +1,14 @@
 from pydantic import BaseModel
-from typing import List, Optional
-from datetime import datetime
+from typing import List
+
+class OrderCreate(BaseModel):
+    product_ids: list[int]
+    user_id: int  
 
 class OrderSchema(BaseModel):
-    id: Optional[int] = None
-    created_at: Optional[datetime] = None
+    id: int
     total_price: float
-    status: str = "En cours"
+    user_id: int 
 
     class Config:
         from_attributes = True
-
-# Ce schéma servira pour la création d'une commande
-class OrderCreate(BaseModel):
-    product_ids: List[int]

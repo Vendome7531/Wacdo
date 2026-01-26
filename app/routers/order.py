@@ -16,7 +16,8 @@ def create_order(order_data: OrderCreate, db: Session = Depends(get_db)):
             raise HTTPException(status_code=404, detail=f"Produit {p_id} non trouvé")
         total += product.price
     
-    new_order = OrderModel(total_price=total)
+    # On enregistre la commande avec son propriétaire (user_id)
+    new_order = OrderModel(total_price=total, user_id=order_data.user_id)
     db.add(new_order)
     db.commit()
     db.refresh(new_order)

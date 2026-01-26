@@ -1,10 +1,15 @@
-from sqlalchemy import Column, Integer, Float, DateTime, String
+from sqlalchemy import Column, Integer, Float, ForeignKey
+from sqlalchemy.orm import relationship
 from app.database.database import Base
-from datetime import datetime
 
 class OrderModel(Base):
     __tablename__ = "orders"
+
     id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    total_price = Column(Float, nullable=False)
-    status = Column(String(50), default="En cours") # En cours, Prête, Livrée
+    total_price = Column(Float)
+    
+    # Lien vers l'ID de l'utilisateur
+    user_id = Column(Integer, ForeignKey("users.id"))
+
+    # Dans app/models/order.py
+    owner = relationship("UserModel", back_populates="orders")
