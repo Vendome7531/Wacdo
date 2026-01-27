@@ -26,3 +26,14 @@ def delete_product_by_id(db: Session, product_id: int):
         db.commit()
         return True
     return False
+
+def update_product_info(db: Session, product_id: int, product_data: ProductCreate):
+    product = db.query(ProductModel).filter(ProductModel.id == product_id).first()
+    if product:
+        product.name = product_data.name
+        product.description = product_data.description
+        product.price = product_data.price
+        db.commit()
+        db.refresh(product)
+        return product
+    return None

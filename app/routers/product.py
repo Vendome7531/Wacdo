@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.schemas.product import ProductSchema, ProductCreate
 # On importe nos fonctions du controller
-from app.controllers.product_controller import get_all_products, create_new_product, delete_product_by_id
+from app.controllers.product_controller import get_all_products, create_new_product, delete_product_by_id, update_product_info
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -21,3 +21,9 @@ def remove_product(product_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Produit non trouvé")
     return {"message": "Produit supprimé avec succès"}
 
+@router.put("/{product_id}", response_model=ProductSchema)
+def update_product(product_id: int, product: ProductCreate, db: Session = Depends(get_db)):
+    updated_product = update_product_info(db, product_id, product)
+    if not updated_product:
+        raise HTTPException(status_code=404, detail="Produit non trouvé")
+    return updated_product
