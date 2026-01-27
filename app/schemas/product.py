@@ -1,14 +1,18 @@
 from pydantic import BaseModel
-from typing import Optional
 
-class ProductSchema(BaseModel):
-    id: Optional[int] = None  # Crucial : permet l'affichage sans forcer la saisie
+# Ce qui est commun à la création et à l'affichage
+class ProductBase(BaseModel):
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     price: float
-    category: Optional[str] = None
-    image: Optional[str] = None
-    is_available: bool = True
+
+# Ce qu'on utilise pour la CREATION (POST)
+class ProductCreate(ProductBase):
+    pass
+
+# Ce qu'on utilise pour l'AFFICHAGE (GET)
+class ProductSchema(ProductBase):
+    id: int
 
     class Config:
-        from_attributes = True
+        from_attributes = True # Permet de convertir les objets SQLAlchemy en JSON

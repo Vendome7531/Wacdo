@@ -1,43 +1,23 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database.database import get_db
-from app.models.product import ProductModel
-from app.schemas.product import ProductSchema
+from app.schemas.product import ProductSchema, ProductCreate
+# On importe nos fonctions du controller
+from app.controllers.product_controller import get_all_products, create_new_product, delete_product_by_id
 
-router = APIRouter(prefix="/products", tags=["products"])
+router = APIRouter(prefix="/products", tags=["Products"])
 
 @router.get("/", response_model=list[ProductSchema])
-def read_products(db: Session = Depends(get_db)):
-    return db.query(ProductModel).all()
+def list_products(db: Session = Depends(get_db)):
+    return get_all_products(db)
 
 @router.post("/", response_model=ProductSchema)
-def create_product(product: ProductSchema, db: Session = Depends(get_db)):
-    db_product = ProductModel(**product.dict(exclude={"id"}))
-    db.add(db_product)
-    db.commit()
-    db.refresh(db_product)
-    return db_product
-
-@router.put("/{product_id}", response_model=ProductSchema)
-def update_product(product_id: int, product_data: ProductSchema, db: Session = Depends(get_db)):
-    db_product = db.query(ProductModel).filter(ProductModel.id == product_id).first()
-    if not db_product:
-        raise HTTPException(status_code=404, detail="Produit non trouvé")
-    
-    for key, value in product_data.dict(exclude={"id"}).items():
-        setattr(db_product, key, value)
-    
-    db.commit()
-    db.refresh(db_product)
-    return db_product
+def add_product(product: ProductCreate, db: Session = Depends(get_db)):
+    return create_new_product(db, product)
 
 @router.delete("/{product_id}")
-def delete_product(product_id: int, db: Session = Depends(get_db)):
-    db_product = db.query(ProductModel).filter(ProductModel.id == product_id).first()
-    if not db_product:
+def remove_product(product_id: int, db: Session = Depends(get_db)):
+    if not delete_product_by_id(db, product_id):
         raise HTTPException(status_code=404, detail="Produit non trouvé")
-    
-    db.delete(db_product)
-    db.commit()
-    return {"message": f"Produit {product_id} supprimé avec succès"}
+    return {"message": "Produit supprimé avec succès"}
 
