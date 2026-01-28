@@ -11,5 +11,5 @@ class OrderModel(Base):
     # Lien vers l'ID de l'utilisateur
     user_id = Column(Integer, ForeignKey("users.id"))
 
-    # Dans app/models/order.py
-    owner = relationship("UserModel", back_populates="orders")
+
+    user = relationship("UserModel", back_populates="orders")

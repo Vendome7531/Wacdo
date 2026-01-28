@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from app.models.product import CategoryEnum
+
 
 # Ce qui est commun à la création et à l'affichage
 class ProductBase(BaseModel):
@@ -8,7 +10,13 @@ class ProductBase(BaseModel):
 
 # Ce qu'on utilise pour la CREATION (POST)
 class ProductCreate(ProductBase):
-    pass
+    name : str
+    description : str
+    price : float
+    category : CategoryEnum
+    image : str
+    is_available : bool
+    
 
 # Ce qu'on utilise pour l'AFFICHAGE (GET)
 class ProductSchema(ProductBase):

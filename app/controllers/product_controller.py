@@ -17,7 +17,6 @@ def create_new_product(db: Session, product_data: ProductCreate):
         description=product_data.description,
         price=product_data.price,
         category=product_data.category,
-        image=product_data.image,
         is_available=product_data.is_available
     )
     db.add(new_product)

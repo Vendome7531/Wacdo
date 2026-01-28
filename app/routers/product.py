@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.schemas.product import ProductSchema, ProductCreate
-# On importe nos fonctions du controller
 from app.controllers.product_controller import get_all_products, create_new_product, delete_product_by_id, update_product_info
 
 router = APIRouter(prefix="/products", tags=["Products"])

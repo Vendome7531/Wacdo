@@ -1,18 +1,43 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from app.database.database import engine, Base
-from app.routers.product import router as product_router
-from app.routers.order import router as order_router
-from app.routers.user import router as user_router # Nouveau import
+from app.routers import auth, user, product, menu, order
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer
 
-# Création des tables (SQLAlchemy va créer la table 'users' automatiquement)
+# 1. Création des tables (pour que tes burgers s'enregistrent vraiment)
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Wacdo API")
+# 2. Configuration du cadenas Swagger
+# C'est cette ligne (tokenUrl="login") qui fait réapparaître le bouton Authorize
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-app.include_router(product_router)
-app.include_router(order_router)
-app.include_router(user_router) # Nouvelle route activée
+app = FastAPI(
+    title="Wacdo API",
+    # On définit ici que l'API utilise OAuth2 pour que le cadenas apparaisse partout
+    security=[{"OAuth2PasswordBearer": []}]
+)
+
+# 3. Configuration CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# 4. Inclusion des routes (bien propres, sans boucle for qui bugue)
+app.include_router(auth.router, tags=["Auth"])
+app.include_router(user.router, prefix="/users", tags=["Users"])
+app.include_router(product.router, prefix="/products", tags=["Products"])
+app.include_router(menu.router, prefix="/menus", tags=["Menus"])
+app.include_router(order.router, prefix="/orders", tags=["Orders"])
 
 @app.get("/")
-def root():
-    return {"message": "Wacdo est prêt avec les utilisateurs !"}
+def read_root():
+    return {"message": "Serveur opérationnel - Bienvenue chez Wacdo !"}
+
+# Route de test pour vérifier si tu es connecté
+@app.get("/auth-check", tags=["Security"])
+def check_connection(token: str = Depends(oauth2_scheme)):
+    return {"status": "Connecté", "token": token}
