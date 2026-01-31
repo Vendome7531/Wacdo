@@ -1,10 +1,21 @@
-# Environnement virtuel Python
+# Environnement virtuel
 venv/
 env/
+.venv/
 
-# Fichiers système
-.DS_Store
-
-# Dossiers de cache Python
-**/__pycache__/
+# Python cache (fichiers compilés inutiles)
+__pycache__/
 *.py[cod]
+*$py.class
+
+# Variables d'environnement (SÉCURITÉ : contient les mots de passe/clés)
+.env
+
+# Base de données locale (SQLite)
+*.db
+*.sqlite3
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
