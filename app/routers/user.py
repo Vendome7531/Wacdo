@@ -1,35 +1,65 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database.database import get_db
+from app.controllers import user_controller
+from app.schemas import user as user_schemas 
+from app.routers.auth import admin_only
 from app.models.user import UserModel
-from app.core.security import get_password_hash
 
 router = APIRouter(prefix="/users", tags=["Utilisateurs"])
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
-def register_user(user_data: dict, db: Session = Depends(get_db)):
-    # 1. Vérifier si l'email existe déjà
-    db_user = db.query(UserModel).filter(UserModel.email == user_data["email"]).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Cet email est déjà utilisé.")
+# --- CREATE (Public ou Admin selon ton choix, ici Public pour l'inscription) ---
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=user_schemas.UserSchema)
+def register_user(user_data: user_schemas.UserCreate, db: Session = Depends(get_db)):
+    """Inscrire un nouvel utilisateur."""
+    return user_controller.create_user(db, user_data)
 
-    # 2. Hacher le mot de passe avec notre nouvelle fonction bcrypt
-    hashed_pwd = get_password_hash(user_data["password"])
+# --- READ ALL (Admin uniquement) ---
+@router.get("/", response_model=list[user_schemas.UserSchema])
+def read_users(
+    db: Session = Depends(get_db), 
+    admin: UserModel = Depends(admin_only) # <--- Sécurisé
+):
+    """Liste tous les utilisateurs (Admin uniquement)."""
+    return user_controller.get_all_users(db)
 
-    # 3. Créer l'objet utilisateur
-    # On s'assure que les clés correspondent exactement à ton JSON Swagger
-    new_user = UserModel(
-        username=user_data["username"],
-        email=user_data["email"],
-        hashed_password=hashed_pwd,
-        role=user_data["role"]
+# --- READ ONE (Public/Staff pour voir un profil) ---
+@router.get("/{user_id}", response_model=user_schemas.UserSchema)
+def read_user(user_id: int, db: Session = Depends(get_db)):
+    """Récupérer un utilisateur par son ID."""
+    db_user = user_controller.get_user_by_id(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    return db_user
+
+# --- UPDATE (Admin uniquement pour changer les rôles par exemple) ---
+@router.put("/{user_id}", response_model=user_schemas.UserSchema)
+def update_user(
+    user_id: int, 
+    user_data: user_schemas.UserUpdate, 
+    db: Session = Depends(get_db),
+    admin: UserModel = Depends(admin_only) # <--- Sécurisé
+):
+    """Modifier un utilisateur (Admin uniquement)."""
+    # .dict(exclude_unset=True) permet de ne modifier que les champs envoyés
+    updated_user = user_controller.update_user(
+        db, 
+        user_id, 
+        user_data.dict(exclude_unset=True)
     )
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    return updated_user
 
-    try:
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        return {"message": "Utilisateur créé avec succès", "id": new_user.id}
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(status_code=500, detail=f"Erreur base de données : {str(e)}")
+# --- DELETE (Admin uniquement) ---
+@router.delete("/{user_id}")
+def delete_user(
+    user_id: int, 
+    db: Session = Depends(get_db),
+    admin: UserModel = Depends(admin_only) # <--- Sécurisé
+):
+    """Supprimer un utilisateur (Admin uniquement)."""
+    success = user_controller.delete_user(db, user_id=user_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    return {"message": f"Utilisateur {user_id} supprimé avec succès"}

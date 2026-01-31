@@ -24,3 +24,7 @@ class ProductSchema(ProductBase):
 
     class Config:
         from_attributes = True # Permet de convertir les objets SQLAlchemy en JSON
+
+class ProductUpdate(ProductCreate):
+    # Ici on peut rendre les champs optionnels si besoin
+    pass

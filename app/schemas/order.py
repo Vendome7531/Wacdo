@@ -1,14 +1,19 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
+from datetime import datetime
 
 class OrderCreate(BaseModel):
-    product_ids: list[int]
-    user_id: int  
+    menu_ids: List[int] = []
+    product_ids: List[int] = []
+    notes: Optional[str] = None
 
 class OrderSchema(BaseModel):
     id: int
-    total_price: float
-    user_id: int 
+    created_at: datetime
+    notes: Optional[str]
+    final_price: float
+    status: str
+    user_id: int
 
     class Config:
         from_attributes = True

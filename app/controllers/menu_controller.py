@@ -3,7 +3,7 @@ from app.models.menu import MenuModel
 from app.models.product import ProductModel
 from app.schemas.menu import MenuCreate
 
-# CREATE
+# --- CREATE ---
 def create_new_menu(db: Session, menu_data: MenuCreate):
     new_menu = MenuModel(
         name=menu_data.name,
@@ -14,41 +14,45 @@ def create_new_menu(db: Session, menu_data: MenuCreate):
     if menu_data.product_ids:
         products = db.query(ProductModel).filter(ProductModel.id.in_(menu_data.product_ids)).all()
         new_menu.products = products
+    
     db.add(new_menu)
     db.commit()
     db.refresh(new_menu)
     return new_menu
 
-# READ (All)
+# --- READ ---
 def get_all_menus(db: Session):
     return db.query(MenuModel).all()
 
-# READ (One)
 def get_menu_by_id(db: Session, menu_id: int):
     return db.query(MenuModel).filter(MenuModel.id == menu_id).first()
 
-# UPDATE
+# --- UPDATE ---
 def update_menu_info(db: Session, menu_id: int, menu_data: MenuCreate):
     db_menu = db.query(MenuModel).filter(MenuModel.id == menu_id).first()
-    if db_menu:
-        db_menu.name = menu_data.name
-        db_menu.description = menu_data.description
-        db_menu.image = menu_data.image
-        db_menu.price = menu_data.price
-        
-        # On met à jour l'association des produits
-        if menu_data.product_ids:
-            products = db.query(ProductModel).filter(ProductModel.id.in_(menu_data.product_ids)).all()
-            db_menu.products = products
+    if not db_menu:
+        return None
+
+    # Mise à jour des champs classiques
+    db_menu.name = menu_data.name
+    db_menu.description = menu_data.description
+    db_menu.image = menu_data.image
+    db_menu.price = menu_data.price
+    
+    # Mise à jour de la relation Many-to-Many avec les produits
+    if menu_data.product_ids is not None:
+        products = db.query(ProductModel).filter(ProductModel.id.in_(menu_data.product_ids)).all()
+        db_menu.products = products
             
-        db.commit()
-        db.refresh(db_menu)
+    db.commit()
+    db.refresh(db_menu)
     return db_menu
 
-# DELETE
+# --- DELETE ---
 def delete_menu_by_id(db: Session, menu_id: int):
     db_menu = db.query(MenuModel).filter(MenuModel.id == menu_id).first()
     if db_menu:
         db.delete(db_menu)
         db.commit()
-    return db_menu
+        return True
+    return False

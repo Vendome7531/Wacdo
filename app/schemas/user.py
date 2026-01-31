@@ -17,8 +17,20 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str # Le mot de passe qu'on reçoit à la création
 
-class UserSchema(UserBase):
-    id: int
+class UserUpdate(BaseModel):
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None  # Permet de changer le mot de passe
+    role: Optional[UserRole] = None # Permet à un admin de changer le rôle
 
-class Config:
-     from_attributes = True
+class UserSchema(BaseModel):
+    id: int
+    username: str
+    email: str
+    role: UserRole
+    is_active: bool 
+    
+    class Config:
+        from_attributes = True
+
+    

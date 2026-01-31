@@ -27,11 +27,11 @@ app.add_middleware(
 )
 
 # 4. Inclusion des routes (bien propres, sans boucle for qui bugue)
-app.include_router(auth.router, tags=["Auth"])
-app.include_router(user.router, prefix="/users", tags=["Users"])
-app.include_router(product.router, prefix="/products", tags=["Products"])
-app.include_router(menu.router, prefix="/menus", tags=["Menus"])
-app.include_router(order.router, prefix="/orders", tags=["Orders"])
+app.include_router(auth.router) # Le tag "Auth" est sûrement déjà dans auth.py
+app.include_router(user.router)
+app.include_router(product.router)
+app.include_router(menu.router)
+app.include_router(order.router)
 
 @app.get("/")
 def read_root():
