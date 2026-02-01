@@ -13,7 +13,7 @@ class OrderSchema(BaseModel):
     notes: Optional[str]
     final_price: float
     status: str
-    user_id: int
+    user_id: Optional[int] = None
 
     class Config:
         from_attributes = True

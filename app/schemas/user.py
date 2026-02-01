@@ -7,12 +7,11 @@ class UserRole(str, Enum):
     ADMINISTRATEUR = "administrateur"
     AGENT_ACCUEIL = "agent_accueil"
     PREPARATEUR_COMMANDE = "preparateur_commande"
-    CLIENT = "client"
 
 class UserBase(BaseModel):
     username: str
     email: EmailStr
-    role: UserRole = UserRole.CLIENT
+    role: UserRole = UserRole.AGENT_ACCUEIL
 
 class UserCreate(UserBase):
     password: str # Le mot de passe qu'on reçoit à la création

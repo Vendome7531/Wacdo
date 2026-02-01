@@ -33,8 +33,8 @@ class OrderModel(Base):
     status = Column(Enum(OrderStatus), default=OrderStatus.EN_ATTENTE)
     
     # Relation avec l'utilisateur qui commande
-    user_id = Column(Integer, ForeignKey("users.id"))
-    user = relationship("UserModel")
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    user = relationship("UserModel", back_populates="orders")
 
     # Contenu de la commande
     menus = relationship("MenuModel", secondary=order_menus)
