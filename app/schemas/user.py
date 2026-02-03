@@ -1,35 +1,31 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-from enum import Enum
 
-# On réutilise les mêmes rôles que dans le modèle
-class UserRole(str, Enum):
-    ADMINISTRATEUR = "administrateur"
-    AGENT_ACCUEIL = "agent_accueil"
-    PREPARATEUR_COMMANDE = "preparateur_commande"
+# Schéma pour la connexion (Login)
+class UserLogin(BaseModel):
+    username: str
+    password: str
 
-class UserBase(BaseModel):
+# Schéma pour le Token JWT
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+# Schéma pour la création d'utilisateur
+class UserCreate(BaseModel):
     username: str
     email: EmailStr
-    role: UserRole = UserRole.AGENT_ACCUEIL
+    password: str
+    role: str  # admin, accueil, preparation
+    is_active: Optional[bool] = True
 
-class UserCreate(UserBase):
-    password: str # Le mot de passe qu'on reçoit à la création
-
-class UserUpdate(BaseModel):
-    username: Optional[str] = None
-    email: Optional[EmailStr] = None
-    password: Optional[str] = None  # Permet de changer le mot de passe
-    role: Optional[UserRole] = None # Permet à un admin de changer le rôle
-
-class UserSchema(BaseModel):
+# Schéma pour la réponse (Lecture seule)
+class UserResponse(BaseModel):
     id: int
     username: str
-    email: str
-    role: UserRole
-    is_active: bool 
-    
+    email: EmailStr
+    role: str
+    is_active: bool
+
     class Config:
         from_attributes = True
-
-    

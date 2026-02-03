@@ -1,83 +1,72 @@
+import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-
 from app.database.database import get_db
-from app.models.user import UserModel, UserRole 
-from app.core.security import verify_password, create_access_token, SECRET_KEY, ALGORITHM
+from app.models.user import UserModel
+from app.schemas.user import Token
+
+SECRET_KEY = "votre_cle_secrete_tres_securisee"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+# Swagger pointe sur /login et utilisera le formulaire (bouton vert)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 router = APIRouter(tags=["Authentification"])
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# --- RÉCUPÉRATION DE L'UTILISATEUR VIA TOKEN ---
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Session invalide ou expirée",
-        headers={"WWW-Authenticate": "Bearer"},
+        detail="Could not validate credentials",
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        login_id: str = payload.get("sub")
-        if login_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+        username: str = payload.get("sub")
+        if username is None: raise credentials_exception
+    except JWTError: raise credentials_exception
         
-    # On cherche l'utilisateur par son username ou email
-    user = db.query(UserModel).filter(
-        or_(UserModel.email == login_id, UserModel.username == login_id)
-    ).first()
-    
-    if user is None:
-        raise credentials_exception
-        
-    # Sécurité supplémentaire : si le compte est inactif, on bloque l'accès aux routes
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Ce compte est désactivé."
-        )
-        
+    user = db.query(UserModel).filter(UserModel.username == username).first()
+    if user is None: raise credentials_exception
     return user
 
-# --- DÉPENDANCE : ADMIN UNIQUEMENT ---
+# --- LES DROITS D'ACCÈS  ---
+
 def admin_only(current_user: UserModel = Depends(get_current_user)):
-    if current_user.role != UserRole.ADMINISTRATEUR:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Accès interdit : Administrateur requis."
-        )
+    if current_user.role != "administrateur":
+        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
     return current_user
 
-# --- ROUTE DE LOGIN (NETTOYÉE) ---
-@router.post("/login")
+def accueil_only(current_user: UserModel = Depends(get_current_user)):
+    if current_user.role not in ["agent_accueil", "administrateur"]:
+        raise HTTPException(status_code=403, detail="Accès réservé au personnel d'accueil")
+    return current_user
+
+def preparation_only(current_user: UserModel = Depends(get_current_user)):
+    if current_user.role not in ["preparateur_commande", "administrateur"]:
+        raise HTTPException(status_code=403, detail="Accès réservé au personnel de préparation")
+    return current_user
+
+# --- ROUTE LOGIN  ---
+
+@router.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    # 1. Recherche de l'utilisateur
-    user = db.query(UserModel).filter(
-        or_(UserModel.email == form_data.username, UserModel.username == form_data.username)
-    ).first()
+    user = db.query(UserModel).filter(UserModel.username == form_data.username).first()
     
-    # 2. Vérification stricte du mot de passe haché 
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Identifiants incorrects",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    if not user:
+        raise HTTPException(status_code=401, detail="Identifiants incorrects")
 
-    # 3. Vérification si le compte est actif
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Ce compte a été désactivé."
-        )
-
-    # 4. Génération du Token JWT
-    # On utilise le username comme identifiant unique dans le token
+    # Vérification BCRYPT
+    if not bcrypt.checkpw(form_data.password.encode('utf-8'), user.hashed_password.encode('utf-8')):
+        raise HTTPException(status_code=401, detail="Identifiants incorrects")
+    
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}

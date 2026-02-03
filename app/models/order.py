@@ -4,13 +4,14 @@ from app.database.database import Base
 from datetime import datetime
 import enum
 
+# 1. Définition des statuts
 class OrderStatus(str, enum.Enum):
     EN_ATTENTE = "en_attente"
     EN_PREPARATION = "en_preparation"
     TERMINE = "termine"
     ANNULE = "annule"
 
-# Tables d'association pour le contenu de la commande
+# 2. Tables d'association pour le contenu (Many-to-Many)
 order_menus = Table(
     'order_menus', Base.metadata,
     Column('order_id', Integer, ForeignKey('orders.id'), primary_key=True),
@@ -23,6 +24,7 @@ order_products = Table(
     Column('product_id', Integer, ForeignKey('products.id'), primary_key=True)
 )
 
+# 3. Modèle principal
 class OrderModel(Base):
     __tablename__ = "orders"
 
@@ -32,10 +34,11 @@ class OrderModel(Base):
     final_price = Column(Float, nullable=False)
     status = Column(Enum(OrderStatus), default=OrderStatus.EN_ATTENTE)
     
-    # Relation avec l'utilisateur qui commande
+    # Relation avec l'utilisateur
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
+    # IMPORTANT : On utilise des noms en "string" (ex: "UserModel") 
+    # pour éviter les imports circulaires en haut de fichier.
     user = relationship("UserModel", back_populates="orders")
-
-    # Contenu de la commande
     menus = relationship("MenuModel", secondary=order_menus)
     products = relationship("ProductModel", secondary=order_products)

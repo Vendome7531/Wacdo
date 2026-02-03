@@ -1,55 +1,57 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from typing import List
 from app.database.database import get_db
-from app.schemas import order as order_schemas
 from app.controllers import order_controller
-from app.routers.auth import get_current_user
-from app.models.user import UserModel
-from app.models.order import OrderModel # On l'importe proprement ici
+from app.schemas.order import OrderCreate, OrderResponse
+from app.models.order import OrderStatus
+from app.routers.auth import get_current_user, admin_only, accueil_only, preparation_only
 
-router = APIRouter(prefix="/orders", tags=["Commandes"])
+router = APIRouter(
+    prefix="/orders",
+    tags=["Orders"]
+)
 
-# --- CREATE ---
-@router.post("/", response_model=order_schemas.OrderSchema, status_code=status.HTTP_201_CREATED)
-def place_order(
-    order_data: order_schemas.OrderCreate, 
+# --- 1. SAISIE DE COMMANDE (Rôle : Accueil ou Admin) ---
+@router.post("/", response_model=OrderResponse)
+def create_new_order(
+    order_data: OrderCreate, 
     db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user)
+    current_user = Depends(accueil_only) # Seul l'accueil peut saisir
 ):
-    try:
-        return order_controller.create_order(
-            db=db, 
-            order_data=order_data, 
-            user_id=current_user.id
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Erreur lors de la création : {str(e)}"
-        )
+    return order_controller.create_order(db, order_data, user_id=current_user.id)
 
-# --- READ MY ORDERS ---
-@router.get("/my-orders", response_model=list[order_schemas.OrderSchema])
-def get_my_orders(
+# --- 2. LISTE DES COMMANDES À PRÉPARER (Rôle : Préparation) ---
+@router.get("/to-prepare", response_model=List[OrderResponse])
+def list_orders_to_prepare(
     db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user)
+    current_user = Depends(preparation_only) # Seul le préparateur voit cette liste
 ):
-    return db.query(OrderModel).filter(OrderModel.user_id == current_user.id).all()
+    return order_controller.get_orders_to_prepare(db)
 
-# --- UPDATE STATUS (PATCH) ---
-@router.patch("/{order_id}/status", response_model=order_schemas.OrderSchema)
-def change_order_status(
-    order_id: int, 
-    new_status: str, 
+# --- 3. VALIDER UNE PRÉPARATION (Rôle : Préparation) ---
+# Quand le préparateur a fini, la commande devient "TERMINE" (prête au comptoir)
+@router.patch("/{order_id}/ready", response_model=OrderResponse)
+def mark_order_as_ready(
+    order_id: int,
     db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_user)
+    current_user = Depends(preparation_only)
 ):
-    # On appelle le controller pour la logique
-    updated_order = order_controller.update_order_status(db, order_id, new_status)
-    
-    if not updated_order:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Commande non trouvée"
-        )
-    return updated_order
+    order = order_controller.update_order_status(db, order_id, OrderStatus.TERMINE)
+    if not order:
+        raise HTTPException(status_code=404, detail="Commande non trouvée")
+    return order
+
+# --- 4. REMETTRE UNE COMMANDE AU CLIENT (Rôle : Accueil) ---
+# L'accueil déclare la commande livrée
+@router.patch("/{order_id}/deliver", response_model=OrderResponse)
+def deliver_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(accueil_only)
+):
+    # Ici on peut réutiliser TERMINE ou ajouter un statut LIVREE si besoin
+    order = order_controller.update_order_status(db, order_id, OrderStatus.TERMINE)
+    if not order:
+        raise HTTPException(status_code=404, detail="Commande non trouvée")
+    return order

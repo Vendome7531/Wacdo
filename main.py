@@ -4,17 +4,18 @@ from app.routers import auth, user, product, menu, order
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 
-# 1. Création des tables (pour que tes burgers s'enregistrent vraiment)
+# 1. Création des tables
 Base.metadata.create_all(bind=engine)
 
 # 2. Configuration du cadenas Swagger
-# C'est cette ligne (tokenUrl="login") qui fait réapparaître le bouton Authorize
+# Cette instance sert à extraire le token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 app = FastAPI(
     title="Wacdo API",
-    # On définit ici que l'API utilise OAuth2 pour que le cadenas apparaisse partout
-    security=[{"OAuth2PasswordBearer": []}]
+    description="Système de gestion interne Wacdo",
+    version="1.0.0"
+    # On a supprimé la ligne 'security=' ici pour nettoyer Swagger
 )
 
 # 3. Configuration CORS
@@ -26,8 +27,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 4. Inclusion des routes (bien propres, sans boucle for qui bugue)
-app.include_router(auth.router) # Le tag "Auth" est sûrement déjà dans auth.py
+# 4. Inclusion des routes
+app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(product.router)
 app.include_router(menu.router)
@@ -37,7 +38,7 @@ app.include_router(order.router)
 def read_root():
     return {"message": "Serveur opérationnel - Bienvenue chez Wacdo !"}
 
-# Route de test pour vérifier si tu es connecté
+# Route de test
 @app.get("/auth-check", tags=["Security"])
 def check_connection(token: str = Depends(oauth2_scheme)):
     return {"status": "Connecté", "token": token}

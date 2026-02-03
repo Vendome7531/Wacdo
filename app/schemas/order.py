@@ -1,19 +1,22 @@
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+from app.models.order import OrderStatus
 
+# Ce qui est nécessaire pour CRÉER une commande
 class OrderCreate(BaseModel):
-    menu_ids: List[int] = []
-    product_ids: List[int] = []
+    menu_ids: Optional[List[int]] = None
+    product_ids: Optional[List[int]] = None
     notes: Optional[str] = None
 
-class OrderSchema(BaseModel):
+# Ce qui est renvoyé par l'API (Lecture)
+class OrderResponse(BaseModel):
     id: int
     created_at: datetime
     notes: Optional[str]
     final_price: float
-    status: str
-    user_id: Optional[int] = None
+    status: OrderStatus
+    user_id: Optional[int]
 
     class Config:
-        from_attributes = True
+        from_attributes = True # Permet à Pydantic de lire les modèles SQLAlchemy
