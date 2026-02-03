@@ -5,7 +5,7 @@ import enum
 
 # Définition des rôles
 class UserRole(str, enum.Enum):
-    ADMINISTRATEUR = "admin"
+    ADMINISTRATEUR = "administrateur"
     AGENT_ACCUEIL = "agent_accueil"          
     PREPARATEUR = "preparateur_commande"
 
@@ -17,8 +17,7 @@ class UserModel(Base):
     email = Column(String(100), unique=True, index=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     
-    # Enum pour le rôle
-    role = Column(Enum(UserRole), default=UserRole.AGENT_ACCUEIL, nullable=False)
+    role = Column(String(50), default="agent_accueil", nullable=False)
     
     is_active = Column(Boolean, default=True) 
 
