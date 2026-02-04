@@ -1,47 +1,41 @@
 from sqlalchemy.orm import Session
 from app.models.product import ProductModel
-from app.schemas.product import ProductCreate
 
-# 1. LIRE TOUT
 def get_all_products(db: Session):
     return db.query(ProductModel).all()
 
-# 2. LIRE UN SEUL
 def get_product_by_id(db: Session, product_id: int):
     return db.query(ProductModel).filter(ProductModel.id == product_id).first()
 
-# 3. CRÉER
-def create_new_product(db: Session, product_data: ProductCreate):
+# --- CRÉATION : Synchronisée avec ton modèle ---
+def create_new_product(db: Session, name, description, price, category, image_url):
     new_product = ProductModel(
-        name=product_data.name,
-        description=product_data.description,
-        price=product_data.price,
-        category=product_data.category,
-        is_available=product_data.is_available
+        name=name,
+        description=description,
+        price=price,
+        category=category,
+        image=image_url,  # <--- On utilise 'image' car c'est le nom dans ton modèle
+        is_available=True
     )
     db.add(new_product)
     db.commit()
     db.refresh(new_product)
     return new_product
 
-# 4. MODIFIER
-def update_product_info(db: Session, product_id: int, product_data: ProductCreate):
+def update_product_info(db: Session, product_id: int, product_data):
     db_product = db.query(ProductModel).filter(ProductModel.id == product_id).first()
     if db_product:
-        db_product.name = product_data.name
-        db_product.description = product_data.description
-        db_product.price = product_data.price
-        db_product.category = product_data.category
-        db_product.image = product_data.image
-        db_product.is_available = product_data.is_available
+        # On utilise une boucle pour mettre à jour les champs proprement
+        for key, value in product_data.dict(exclude_unset=True).items():
+            setattr(db_product, key, value)
         db.commit()
         db.refresh(db_product)
     return db_product
 
-# 5. SUPPRIMER
 def delete_product_by_id(db: Session, product_id: int):
     db_product = db.query(ProductModel).filter(ProductModel.id == product_id).first()
     if db_product:
         db.delete(db_product)
         db.commit()
-    return db_product
+        return True
+    return False

@@ -19,7 +19,7 @@ class ProductSchema(ProductBase):
     id: int = Field(..., example=12)
     # On rajoute les champs de ProductCreate pour qu'ils soient visibles au GET
     category: CategoryEnum
-    image: str
+    image: Optional[str]
     is_available: bool
 
     class Config:

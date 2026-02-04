@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Path
 from sqlalchemy.orm import Session
 from app.database.database import get_db
-# Option A : On importe les classes directement
 from app.schemas.menu import MenuSchema, MenuCreate 
 from app.controllers import menu_controller
 from app.dependencies import admin_only
@@ -15,6 +14,18 @@ router = APIRouter(prefix="/menus", tags=["Menus"])
 def list_menus(db: Session = Depends(get_db)):
     """Liste tous les menus disponibles."""
     return menu_controller.get_all_menus(db)
+
+# --- LECTURE D'UN MENU (ID): Accessible à tous (Agent, Préparateur, Admin) ---
+
+@router.get("/{menu_id}", response_model=MenuSchema) # Ou MenuResponse selon ton fichier
+def read_menu(
+    menu_id: int = Path(..., description="L'identifiant unique du menu (ex: 1 pour le Menu Best Of)"),
+    db: Session = Depends(get_db)
+):
+    """
+    **Consulter un menu** : Affiche la composition d'un menu spécifique et son prix remisé.
+    """
+    return menu_controller.get_menu_by_id(db, menu_id=menu_id)
 
 # --- CRÉATION : Admin uniquement ---
 @router.post("/", response_model=MenuSchema, status_code=status.HTTP_201_CREATED)
