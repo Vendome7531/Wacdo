@@ -4,7 +4,8 @@ from typing import List
 from app.database.database import get_db
 from app.controllers import user_controller
 from app.schemas import user as user_schemas
-from app.routers.auth import admin_only
+from app.dependencies import admin_only
+from app.schemas.user import UserCreate, UserResponse, UserDeleteResponse
 
 router = APIRouter(
     prefix="/users",
@@ -33,8 +34,11 @@ def update_user(user_id: int, user_update: user_schemas.UserCreate, db: Session 
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
     return db_user
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{user_id}", response_model=UserDeleteResponse) # Le statut par défaut sera 200
 def delete_user(user_id: int, db: Session = Depends(get_db), current_user = Depends(admin_only)):
+    """Supprime un utilisateur (Admin uniquement)."""
     if not user_controller.delete_user(db, user_id=user_id):
         raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    return None
+    
+    # On renvoie le dictionnaire qui correspond au schéma UserDeleteResponse
+    return {"message": "Les accès de cet employé ont été révoqués avec succès"}

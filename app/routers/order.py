@@ -5,7 +5,7 @@ from app.database.database import get_db
 from app.controllers import order_controller
 from app.schemas.order import OrderCreate, OrderResponse
 from app.models.order import OrderStatus
-from app.routers.auth import get_current_user, admin_only, accueil_only, preparation_only
+from app.dependencies import get_current_user, admin_only, accueil_only, preparation_only
 
 router = APIRouter(
     prefix="/orders",

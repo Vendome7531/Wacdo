@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.schemas.product import ProductSchema, ProductCreate, ProductUpdate
 from app.controllers import product_controller
-from app.routers.auth import admin_only
+from app.dependencies import admin_only
 from app.models.user import UserModel
+from app.schemas.product import ProductCreate, ProductSchema, ProductDeleteResponse 
 
 router = APIRouter(prefix="/products", tags=["Produits"])
 
@@ -39,7 +40,7 @@ def update_product(
     return updated_product
 
 # --- SUPPRESSION : Admin seulement ---
-@router.delete("/{product_id}", status_code=status.HTTP_200_OK)
+@router.delete("/{product_id}", response_model=ProductDeleteResponse)
 def remove_product(
     product_id: int, 
     db: Session = Depends(get_db),

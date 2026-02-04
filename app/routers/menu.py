@@ -4,8 +4,9 @@ from app.database.database import get_db
 # Option A : On importe les classes directement
 from app.schemas.menu import MenuSchema, MenuCreate 
 from app.controllers import menu_controller
-from app.routers.auth import admin_only
+from app.dependencies import admin_only
 from app.models.user import UserModel
+from app.schemas.menu import MenuCreate, MenuSchema, MenuDeleteResponse  
 
 router = APIRouter(prefix="/menus", tags=["Menus"])
 
@@ -26,7 +27,7 @@ def create_menu(
     return menu_controller.create_new_menu(db, menu)
 
 # --- SUPPRESSION : Admin uniquement ---
-@router.delete("/{menu_id}")
+@router.delete("/{menu_id}", response_model=MenuDeleteResponse)
 def delete_menu(
     menu_id: int, 
     db: Session = Depends(get_db),

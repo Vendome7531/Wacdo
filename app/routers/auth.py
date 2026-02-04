@@ -1,19 +1,17 @@
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from typing import Annotated  
+from fastapi import APIRouter, Depends, HTTPException, Form
 from sqlalchemy.orm import Session
-from jose import JWTError, jwt
 from datetime import datetime, timedelta
+from jose import jwt
+
 from app.database.database import get_db
 from app.models.user import UserModel
 from app.schemas.user import Token
+from app.dependencies import SECRET_KEY, ALGORITHM
 
-SECRET_KEY = "votre_cle_secrete_tres_securisee"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-# Swagger pointe sur /login et utilisera le formulaire (bouton vert)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+ACCESS_TOKEN_EXPIRE_MINUTES = 480
 
 router = APIRouter(tags=["Authentification"])
 
@@ -23,49 +21,22 @@ def create_access_token(data: dict):
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-    )
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None: raise credentials_exception
-    except JWTError: raise credentials_exception
-        
-    user = db.query(UserModel).filter(UserModel.username == username).first()
-    if user is None: raise credentials_exception
-    return user
-
-# --- LES DROITS D'ACCÈS  ---
-
-def admin_only(current_user: UserModel = Depends(get_current_user)):
-    if current_user.role != "administrateur":
-        raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
-    return current_user
-
-def accueil_only(current_user: UserModel = Depends(get_current_user)):
-    if current_user.role not in ["agent_accueil", "administrateur"]:
-        raise HTTPException(status_code=403, detail="Accès réservé au personnel d'accueil")
-    return current_user
-
-def preparation_only(current_user: UserModel = Depends(get_current_user)):
-    if current_user.role not in ["preparateur_commande", "administrateur"]:
-        raise HTTPException(status_code=403, detail="Accès réservé au personnel de préparation")
-    return current_user
-
-# --- ROUTE LOGIN  ---
-
 @router.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = db.query(UserModel).filter(UserModel.username == form_data.username).first()
-    
-    if not user:
+def login(
+    username: Annotated[str, Form(description="Identifiant (email ou pseudo)")] = "", 
+    password: Annotated[str, Form(description="Mot de passe sécurisé")] = "",
+    db: Session = Depends(get_db)
+):
+    """
+    **Authentification Wacdo** : Permet d'obtenir un jeton d'accès pour utiliser l'API.
+    """
+    # Puisqu'on met "" par défaut pour vider les cases, on vérifie manuellement
+    if not username or not password:
         raise HTTPException(status_code=401, detail="Identifiants incorrects")
 
-    # Vérification BCRYPT
-    if not bcrypt.checkpw(form_data.password.encode('utf-8'), user.hashed_password.encode('utf-8')):
+    user = db.query(UserModel).filter(UserModel.username == username).first()
+    
+    if not user or not bcrypt.checkpw(password.encode('utf-8'), user.hashed_password.encode('utf-8')):
         raise HTTPException(status_code=401, detail="Identifiants incorrects")
     
     access_token = create_access_token(data={"sub": user.username})

@@ -4,6 +4,30 @@ from app.routers import auth, user, product, menu, order
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 
+
+app = FastAPI(
+    title="WacDo API - Système de Gestion de Restaurant",
+    description="""
+    ## Système de gestion des commandes et du personnel.
+    
+    Cette API permet de gérer le flux complet du restaurant :
+    * **Authentification** : Gestion des accès par jetons JWT.
+    * **Rôles sécurisés** : 
+        * `administrateur` : Accès total.
+        * `agent_accueil` : Prise de commande.
+        * `preparateur_commande` : Gestion de la cuisine.
+    * **Catalogue** : Gestion des Produits et Menus.
+    * **Tunnel de Commande** : Suivi en temps réel (En attente -> Prête -> Terminée).
+    """,
+    version="1.1.0",
+    contact={
+        "name": "Équipe de développement WacDo",
+    }
+)
+
+
+
+
 # 1. Création des tables
 Base.metadata.create_all(bind=engine)
 
