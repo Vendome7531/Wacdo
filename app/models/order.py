@@ -6,9 +6,10 @@ import enum
 
 # 1. Définition des statuts
 class OrderStatus(str, enum.Enum):
-    EN_ATTENTE = "en_attente"
-    EN_PREPARATION = "en_preparation"
-    TERMINE = "termine"
+    EN_ATTENTE = "en_attente"          # Commande saisie par l'accueil
+    EN_PREPARATION = "en_preparation"  # La cuisine a commencé
+    PRETE = "prete"                    # La cuisine a fini, le sac attend au comptoir
+    TERMINE = "termine"                # Le client est parti avec sa commande
     ANNULE = "annule"
 
 # 2. Tables d'association pour le contenu (Many-to-Many)

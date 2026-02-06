@@ -13,16 +13,7 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="WacDo API - Système de Gestion de Restaurant",
     description="""
-    ## Système de gestion des commandes et du personnel.
-    
-    Cette API permet de gérer le flux complet du restaurant :
-    * **Authentification** : Gestion des accès par jetons JWT.
-    * **Rôles sécurisés** : 
-        * `administrateur` : Accès total.
-        * `agent_accueil` : Prise de commande.
-        * `preparateur_commande` : Gestion de la cuisine.
-    * **Catalogue** : Gestion des Produits et Menus.
-    * **Tunnel de Commande** : Suivi en temps réel (En attente -> Prête -> Terminée).
+    Système de gestion des commandes, des produits, des menus et du personnel.
     """,
     version="1.1.0"
 )
