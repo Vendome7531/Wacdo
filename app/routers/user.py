@@ -9,6 +9,10 @@ from app.schemas.user import UserResponse, UserDeleteResponse
 
 router = APIRouter(prefix="/users", tags=["Utilisateurs"])
 
+@router.get("/", response_model=List[UserResponse])
+def read_users(skip: int = Query(0), limit: int = Query(100), db: Session = Depends(get_db)):
+    return user_controller.get_all_users(db, skip=skip, limit=limit)
+
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserResponse)
 def create_user(
     username: str = Form(..., description="Nom de l'utilisateur"),
@@ -21,10 +25,6 @@ def create_user(
 ):
     """**Créer un employé** : Saisissez les infos et choisissez le rôle dans la liste."""
     return user_controller.create_new_user(db, username, email, password, role, is_active)
-
-@router.get("/", response_model=List[UserResponse])
-def read_users(skip: int = Query(0), limit: int = Query(100), db: Session = Depends(get_db)):
-    return user_controller.get_all_users(db, skip=skip, limit=limit)
 
 @router.get("/{user_id}", response_model=UserResponse)
 def read_user(user_id: int = Path(...), db: Session = Depends(get_db)):

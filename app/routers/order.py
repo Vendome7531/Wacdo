@@ -24,7 +24,7 @@ def create_new_order(
     current_user = Depends(accueil_only)
 ):
     """**Saisie Ultra-Rapide** : Tapez les IDs séparés par des virgules."""
-    return order_controller.create_order_from_string(
+    return order_controller.create_order_from_form(
         db=db,
         menu_ids_str=menu_ids,
         product_ids_str=product_ids,
