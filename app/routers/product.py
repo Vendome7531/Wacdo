@@ -6,7 +6,7 @@ import shutil
 
 from app.database.database import get_db
 from app.models.user import UserModel
-from app.schemas.product import ProductSchema, ProductDeleteResponse, AvailabilityEnum
+from app.schemas.product import ProductSchema, ProductDeleteResponse  # AvailabilityEnum supprimé
 from app.controllers import product_controller
 from app.dependencies import admin_only
 
@@ -15,15 +15,15 @@ router = APIRouter(prefix="/products", tags=["Produits"])
 # --- LECTURE : Public ---
 @router.get("/", response_model=List[ProductSchema])
 def list_products(db: Session = Depends(get_db)):
-    """**Liste tous les menus** : Récupère l'ensemble des menus disponibles dans l'établissement."""
+    """**Liste tous les produits** : Récupère l'ensemble des articles disponibles."""
     return product_controller.get_all_products(db)
 
 @router.get("/{product_id}", response_model=ProductSchema)
 def read_product(
-    product_id: int = Path(..., description="L'identifiant unique du produit (ex: 1 pour le Big Mac)"),
+    product_id: int = Path(..., description="L'identifiant unique du produit"),
     db: Session = Depends(get_db)
 ):
-    """**Consulter un produit** : Affiche les détails, le prix et la disponibilité d'un article spécifique via son ID."""
+    """**Consulter un produit** : Affiche les détails via son ID."""
     product = product_controller.get_product_by_id(db, product_id=product_id)
     if not product:
         raise HTTPException(status_code=404, detail="Produit non trouvé")
@@ -35,12 +35,13 @@ def create_product(
     name: str = Form(...),
     description: str = Form(None),
     price: float = Form(...),
-    is_available: AvailabilityEnum = Form(AvailabilityEnum.DISPO),
+    # Remplacé : l'Enum devient un booléen
+    is_available: bool = Form(True),
     image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     admin: UserModel = Depends(admin_only)
 ):
-    """**Ajouter un produit** : Crée une nouvelle référence dans la base de données avec son image (Admin seulement)."""
+    """**Ajouter un produit** : Crée une nouvelle référence (Admin seulement)."""
     image_url = None
     if image:
         os.makedirs("static/images", exist_ok=True)
@@ -65,12 +66,13 @@ def update_product(
     name: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     price: Optional[float] = Form(None),
-    is_available: Optional[AvailabilityEnum] = Form(None),
+    # Remplacé : l'Enum devient un booléen optionnel
+    is_available: Optional[bool] = Form(None),
     image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     admin: UserModel = Depends(admin_only)
 ):
-    """**Modifier un produit** : Met à jour les informations ou la disponibilité (rupture de stock) d'un article existant."""
+    """**Modifier un produit** : Met à jour les informations ou la disponibilité."""
     image_url = None
     if image:
         os.makedirs("static/images", exist_ok=True)
@@ -96,11 +98,10 @@ def update_product(
 # --- SUPPRESSION : Admin uniquement ---
 @router.delete("/{product_id}", response_model=ProductDeleteResponse)
 def delete_product(
-    product_id: int = Path(..., description="L'ID du produit à retirer définitivement de la carte"),
+    product_id: int = Path(..., description="L'ID du produit à retirer"),
     db: Session = Depends(get_db),
     admin: UserModel = Depends(admin_only)
 ):
-    """**Supprimer un produit** : Efface définitivement un article du catalogue."""
     if not product_controller.delete_product_by_id(db, product_id):
         raise HTTPException(status_code=404, detail="Produit non trouvé")
     return {"message": "Produit supprimé avec succès"}

@@ -14,10 +14,10 @@ class MenuModel(Base):
     __tablename__ = "menus"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    description = Column(String, nullable=True)
+    name = Column(String(255), nullable=False)
+    description = Column(String(500), nullable=True)
     price = Column(Float, nullable=False)
-    image = Column(String, nullable=True)
+    image = Column(String(500), nullable=True)
     is_available = Column(Boolean, default=True) 
 
     # Relation avec les produits

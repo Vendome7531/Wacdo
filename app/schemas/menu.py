@@ -1,13 +1,12 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from app.schemas.product import ProductSchema, AvailabilityEnum
+from app.schemas.product import ProductSchema 
 
 class MenuBase(BaseModel):
     name: str
     description: Optional[str] = None
     price: float
-    # On utilise l'Enum pour que le POST propose le menu déroulant
-    is_available: AvailabilityEnum = AvailabilityEnum.DISPO
+    is_available: bool = True 
 
 class MenuCreate(MenuBase):
     product_ids: List[int] = []
@@ -17,8 +16,7 @@ class MenuSchema(BaseModel):
     name: str
     description: Optional[str] = None
     price: float
-    # On met 'str' ici car le controller renvoie "disponible" ou "non disponible"
-    is_available: str 
+    is_available: bool 
     image: Optional[str] = None
     products: List[ProductSchema] = []
 

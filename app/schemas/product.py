@@ -1,17 +1,11 @@
 from pydantic import BaseModel
 from typing import Optional
-from enum import Enum
-
-# L'Enum qui crée le menu déroulant
-class AvailabilityEnum(str, Enum):
-    DISPO = "disponible"
-    NON_DISPO = "non disponible"
 
 class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None
     price: float
-    is_available: AvailabilityEnum = AvailabilityEnum.DISPO
+    is_available: bool = True 
 
 class ProductCreate(ProductBase):
     pass
@@ -21,14 +15,14 @@ class ProductUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = None
-    is_available: Optional[AvailabilityEnum] = None
+    is_available: bool
 
 class ProductSchema(BaseModel):
     id: int
     name: str
     description: Optional[str] = None
     price: float
-    is_available: str  # On renvoie le texte ("disponible") pour le front/Swagger
+    is_available: bool
     image: Optional[str] = None
 
     class Config:

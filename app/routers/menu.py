@@ -7,7 +7,7 @@ import shutil
 from app.database.database import get_db
 from app.models.user import UserModel
 from app.schemas.menu import MenuSchema, MenuDeleteResponse  
-from app.schemas.product import AvailabilityEnum
+# L'import de AvailabilityEnum a été supprimé ici
 from app.controllers import menu_controller
 from app.dependencies import admin_only
 
@@ -37,8 +37,8 @@ def create_menu(
     name: str = Form(...),
     description: str = Form(None),
     price: float = Form(...),
-    is_available: AvailabilityEnum = Form(AvailabilityEnum.DISPO),
-    # Saisie simplifiée par virgules
+    # Changé ici : utilisation de bool au lieu de l'Enum
+    is_available: bool = Form(True),
     product_ids: Optional[str] = Form(None, description="IDs des produits séparés par une virgule (ex: 1,2,3)"),
     image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
@@ -59,7 +59,7 @@ def create_menu(
         description=description, 
         price=price, 
         image_url=image_url,
-        is_available=is_available,
+        is_available=is_available, # C'est maintenant un booléen
         product_ids=product_ids
     )
 
@@ -70,14 +70,14 @@ def update_menu(
     name: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     price: Optional[float] = Form(None),
-    is_available: Optional[AvailabilityEnum] = Form(None),
-    # Saisie simplifiée par virgules regroupe avec le reste
+    # Changé ici : utilisation de bool optionnel
+    is_available: Optional[bool] = Form(None),
     product_ids: Optional[str] = Form(None, description="Nouveaux IDs produits séparés par une virgule (ex: 4,5,6)"),
     image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     admin: UserModel = Depends(admin_only)
 ):
-    """**Modifier un menu** : L'ID est en haut, les modifications (dont les produits séparés par des virgules) sont en bas."""
+    """**Modifier un menu** : L'ID est en haut, les modifications sont en bas."""
     image_url = None
     if image:
         os.makedirs("static/images", exist_ok=True)

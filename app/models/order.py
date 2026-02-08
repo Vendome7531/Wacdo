@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, Float, String, Text, ForeignKey, Table, DateTime, Enum
 from sqlalchemy.orm import relationship
 from app.database.database import Base
-from datetime import datetime
+from datetime import datetime, timezone
 import enum
 
 # 1. Définition des statuts
@@ -30,7 +30,7 @@ class OrderModel(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     notes = Column(Text, nullable=True)
     final_price = Column(Float, nullable=False)
     status = Column(Enum(OrderStatus), default=OrderStatus.EN_ATTENTE)

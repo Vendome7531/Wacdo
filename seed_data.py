@@ -1,71 +1,111 @@
-from sqlalchemy.orm import Session
-from app.database.database import SessionLocal
-from app.models.product import ProductModel, CategoryEnum
-from app.models.menu import MenuModel
+import sys
+import os
+sys.path.append(os.getcwd())
 
-def seed_data():
+from sqlalchemy.orm import Session
+from app.database.database import SessionLocal, engine, Base
+from app.models.product import ProductModel
+from app.models.menu import MenuModel
+from sqlalchemy import text
+
+def seed_complete():
     db: Session = SessionLocal()
     try:
-        print("🚀 Début du remplissage de la base de données...")
+        print("🏗️  Recréation des tables (structure propre)...")
+        Base.metadata.create_all(bind=engine)
 
-        # --- 1. CRÉATION DES PRODUITS ---
-        # On définit une liste de produits avec tes catégories (Enum)
-        product_list = [
-            {"name": "Big Wac", "description": "Le burger iconique", "price": 5.50, "category": CategoryEnum.Burgers},
-            {"name": "WacDouble", "description": "Double dose de plaisir", "price": 6.80, "category": CategoryEnum.Burgers},
-            {"name": "Frites XL", "description": "Croustillantes à souhait", "price": 3.20, "category": CategoryEnum.Accompagnements},
-            {"name": "WacCola", "description": "Boisson rafraîchissante", "price": 2.50, "category": CategoryEnum.Boissons},
-            {"name": "WacFlurry", "description": "Glace vanille et éclats de biscuits", "price": 3.90, "category": CategoryEnum.Desserts},
-        ]
-
-        for p_data in product_list:
-            # On vérifie si le produit existe déjà pour éviter les doublons
-            exists = db.query(ProductModel).filter(ProductModel.name == p_data["name"]).first()
-            if not exists:
-                db.add(ProductModel(**p_data))
-        
-        # On valide l'ajout des produits pour qu'ils aient des IDs exploitables
+        print("🧹 Nettoyage des données...")
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
+        db.execute(text("TRUNCATE TABLE menu_products;"))
+        db.execute(text("TRUNCATE TABLE menus;"))
+        db.execute(text("TRUNCATE TABLE products;"))
+        db.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
         db.commit()
-        print("✅ Produits insérés ou déjà présents.")
 
-        # --- 2. CRÉATION DU MENU (Liaison Many-to-Many) ---
-        menu_name = "Menu Best-Wac"
+        print("🌱 Insertion des produits avec images...")
+        p1 = ProductModel(
+            name="Le Royal Cheese", 
+            description="Boeuf, cheddar fondant", 
+            price=8.50, 
+            is_available=True,
+            image="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=500"
+        )
+        p2 = ProductModel(
+            name="Frites Maison", 
+            description="Croustillantes à souhait", 
+            price=3.50, 
+            is_available=True,
+            image="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?q=80&w=500"
+        )
+        p3 = ProductModel(
+            name="Coca-Cola Zero", 
+            description="33cl de fraîcheur", 
+            price=2.50, 
+            is_available=True,
+            image="https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=500"
+        )
+        p4 = ProductModel(
+            name="Le Veggie Burger", 
+            description="Galette de pois chiche et herbes", 
+            price=9.00, 
+            is_available=True,
+            image="https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=500"
+        )
+        p5 = ProductModel(
+            name="Nuggets x9", 
+            description="Poulet pané doré", 
+            price=6.50, 
+            is_available=True,
+            image="https://images.unsplash.com/photo-1562967914-608f82629710?q=80&w=500"
+        )
+        p6 = ProductModel(
+            name="Muffin Chocolat", 
+            description="Cœur fondant", 
+            price=3.00, 
+            is_available=True,
+            image="https://images.unsplash.com/photo-1563805042-7684c019e1cb?q=80&w=500"
+        )
         
-        # Vérification si le menu existe déjà
-        if not db.query(MenuModel).filter(MenuModel.name == menu_name).first():
-            # On récupère les produits que l'on veut mettre dans le menu
-            burger = db.query(ProductModel).filter(ProductModel.name == "Big Wac").first()
-            frite = db.query(ProductModel).filter(ProductModel.name == "Frites XL").first()
-            boisson = db.query(ProductModel).filter(ProductModel.name == "WacCola").first()
+        db.add_all([p1, p2, p3, p4, p5, p6])
+        db.commit() 
 
-            if burger and frite and boisson:
-                nouveau_menu = MenuModel(
-                    name=menu_name,
-                    description="Le menu complet classique (Burger + Frite + Boisson)",
-                    price=10.90
-                )
+        print("🍱 Création des menus avec images...")
+        m1 = MenuModel(
+            name="Menu Royal", 
+            description="Burger + Frites + Boisson", 
+            price=12.50, 
+            is_available=True,
+            image="https://images.unsplash.com/photo-1513185158878-8d8c196b7f81?q=80&w=500"
+        )
+        m1.products = [p1, p2, p3]
 
-                # Utilisation de la relation 'products' définie dans ton modèle MenuModel
-                # Cela remplit automatiquement la table 'menu_products'
-                nouveau_menu.products.append(burger)
-                nouveau_menu.products.append(frite)
-                nouveau_menu.products.append(boisson)
+        m2 = MenuModel(
+            name="Menu Veggie", 
+            description="Veggie Burger + Eau + Muffin", 
+            price=13.00, 
+            is_available=True,
+            image="https://images.unsplash.com/photo-1525059696034-4967a8e1dca2?q=80&w=500"
+        )
+        m2.products = [p4, p3, p6]
 
-                db.add(nouveau_menu)
-                db.commit()
-                print(f"✅ Menu '{menu_name}' créé avec ses produits liés !")
-            else:
-                print("⚠️ Impossible de créer le menu : certains produits sont introuvables.")
-        else:
-            print(f"ℹ️ Le menu '{menu_name}' existe déjà.")
+        m3 = MenuModel(
+            name="Box Partage", 
+            description="Nuggets + Frites + Boisson", 
+            price=18.00, 
+            is_available=True,
+            image="https://images.unsplash.com/photo-1541592106381-b31e9677c0e5?q=80&w=500"
+        )
+        m3.products = [p5, p2, p3] 
 
-        print("🏁 Fin du script de seed.")
+        db.add_all([m1, m2, m3])
+        db.commit()
+        print("✅ Base de données synchronisée, propre et illustrée !")
 
     except Exception as e:
-        print(f"❌ Une erreur est survenue : {e}")
+        print(f"❌ Erreur : {e}")
         db.rollback()
     finally:
         db.close()
 
 if __name__ == "__main__":
-    seed_data()
+    seed_complete()
