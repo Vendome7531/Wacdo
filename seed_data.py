@@ -6,23 +6,38 @@ from sqlalchemy.orm import Session
 from app.database.database import SessionLocal, engine, Base
 from app.models.product import ProductModel
 from app.models.menu import MenuModel
+from app.models.user import UserModel
+from app.core.security import get_password_hash
 from sqlalchemy import text
+from app.models.order import OrderModel
 
 def seed_complete():
     db: Session = SessionLocal()
     try:
-        print("🏗️  Recréation des tables (structure propre)...")
+        print("🏗️  Recréation des tables sur Aiven...")
         Base.metadata.create_all(bind=engine)
 
-        print("🧹 Nettoyage des données...")
+        print("🧹 Nettoyage complet (Truncate)...")
         db.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
         db.execute(text("TRUNCATE TABLE menu_products;"))
         db.execute(text("TRUNCATE TABLE menus;"))
         db.execute(text("TRUNCATE TABLE products;"))
+        db.execute(text("TRUNCATE TABLE users;"))
         db.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
         db.commit()
 
-        print("🌱 Insertion des produits avec images...")
+        print("👤 Création de l'admin 'vendome'...")
+        admin = UserModel(
+            username="vendome",
+            email="admin@wacdo.com",
+            hashed_password=get_password_hash("1234"),
+            role="administrateur",
+            is_active=True
+        )
+        db.add(admin)
+        db.commit()
+
+        print("🌱 Insertion des produits avec TOUTES les images...")
         p1 = ProductModel(
             name="Le Royal Cheese", 
             description="Boeuf, cheddar fondant", 
@@ -69,7 +84,7 @@ def seed_complete():
         db.add_all([p1, p2, p3, p4, p5, p6])
         db.commit() 
 
-        print("🍱 Création des menus avec images...")
+        print("🍱 Création des menus complets...")
         m1 = MenuModel(
             name="Menu Royal", 
             description="Burger + Frites + Boisson", 
@@ -99,7 +114,7 @@ def seed_complete():
 
         db.add_all([m1, m2, m3])
         db.commit()
-        print("✅ Base de données synchronisée, propre et illustrée !")
+        print("✅ Tout est sur Aiven : Admin, Produits (avec images) et Menus !")
 
     except Exception as e:
         print(f"❌ Erreur : {e}")
