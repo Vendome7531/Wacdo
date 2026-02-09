@@ -1,12 +1,14 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-
+# CHANGEMENT ICI : On importe declarative_base directement depuis orm
+from sqlalchemy.orm import sessionmaker, declarative_base
 
 SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:@localhost/wacdo_db"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# C'est ici que le warning disparaîtra
 Base = declarative_base()
 
 def get_db():
@@ -15,6 +17,5 @@ def get_db():
         yield db
     finally:
         db.close()
-
 
 

@@ -10,7 +10,12 @@ from app.schemas.user import UserResponse, UserDeleteResponse
 router = APIRouter(prefix="/users", tags=["Utilisateurs"])
 
 @router.get("/", response_model=List[UserResponse])
-def read_users(skip: int = Query(0), limit: int = Query(100), db: Session = Depends(get_db)):
+def read_users(
+    skip: int = Query(0), 
+    limit: int = Query(100), 
+    db: Session = Depends(get_db),
+    current_user = Depends(admin_only)  # <--- IL MANQUAIT ÇA !
+):
     return user_controller.get_all_users(db, skip=skip, limit=limit)
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=UserResponse)

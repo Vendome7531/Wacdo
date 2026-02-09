@@ -9,29 +9,34 @@ import os
 # 1. Création des tables
 Base.metadata.create_all(bind=engine)
 
-# 2. Initialisation de l'application (UNE SEULE FOIS)
+# 2. Initialisation de l'application
 app = FastAPI(
     title="WacDo API - Système de Gestion de Restaurant",
-    description="""
-    Système de gestion des commandes, des produits, des menus et du personnel.
-    """,
+    description="Système de gestion des commandes, des produits, des menus et du personnel.",
     version="1.1.0"
 )
 
 # 3. Gestion des fichiers statiques (POUR LES IMAGES)
-# On vérifie que le dossier existe pour éviter le plantage au démarrage
 if not os.path.exists("static"):
     os.makedirs("static/images", exist_ok=True)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# 4. Configuration CORS
+# 4. Configuration CORS (Le "Portier" de ton API)
+# On définit ici quels domaines ont le droit de contacter ton API
+origins = [
+    "http://localhost:3000",      # Port classique pour React/Next.js
+    "http://localhost:5173",      # Port classique pour Vite/Vue.js
+    "http://127.0.0.1:5500",      # Port classique pour Live Server (VS Code)
+    "*",                          # Permet d'accepter TOUT pendant la phase de dev
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=origins,        # Liste des sites autorisés
+    allow_credentials=True,       # Autorise l'envoi des cookies et headers d'auth
+    allow_methods=["*"],          # Autorise toutes les méthodes (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],          # Autorise tous les headers (Content-Type, Authorization, etc.)
 )
 
 # 5. Schéma de sécurité pour Swagger

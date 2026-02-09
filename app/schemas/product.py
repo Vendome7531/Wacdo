@@ -1,32 +1,31 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 
 class ProductBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    price: float
-    is_available: bool = True 
+    name: str = Field(..., json_schema_extra={"example": "Big Mac"})
+    description: Optional[str] = Field(None, json_schema_extra={"example": "Deux étages de bœuf haché..."})
+    price: float = Field(..., json_schema_extra={"example": 5.99})
+    is_available: bool = Field(True, json_schema_extra={"example": True})
 
 class ProductCreate(ProductBase):
     pass
 
-# On le garde pour la forme, même si on utilise Form(...) dans le router
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = None
-    is_available: bool
+    is_available: bool = Field(..., json_schema_extra={"example": True})
 
 class ProductSchema(BaseModel):
-    id: int
-    name: str
+    id: int = Field(..., json_schema_extra={"example": 1})
+    name: str = Field(..., json_schema_extra={"example": "Big Mac"})
     description: Optional[str] = None
-    price: float
+    price: float = Field(..., json_schema_extra={"example": 5.99})
     is_available: bool
-    image: Optional[str] = None
+    image: Optional[str] = Field(None, json_schema_extra={"example": "uploads/bigmac.jpg"})
 
-    class Config:
-        from_attributes = True
+    # CHANGEMENT ICI : Adieu class Config, bonjour model_config
+    model_config = ConfigDict(from_attributes=True)
 
 class ProductDeleteResponse(BaseModel):
-    message: str
+    message: str = Field(..., json_schema_extra={"example": "Produit supprimé avec succès"})
