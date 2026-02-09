@@ -6,14 +6,13 @@ from sqlalchemy.orm import sessionmaker
 # On force l'accès aux dossiers du projet
 sys.path.append(os.getcwd())
 from app.database.database import Base
-from app.models.product import ProductModel
-from app.models.menu import MenuModel
-from app.models.user import UserModel
-from app.models.order import OrderModel
-from app.core.security import get_password_hash
+# ... (tes autres imports restent les mêmes)
 
-# L'URL de ta capture n°64 (Aiven)
-DATABASE_URL = "mysql+pymysql://avnadmin:AVNS_mC88vnTwUWGWxZJwD5S@wacdo-mysql-db-wacdo-project.i.aivencloud.com:27384/defaultdb"
+# --- MODIFICATION ICI ---
+# On essaye de récupérer l'URL via le système (pour Render/GitHub)
+# Si elle n'existe pas, on met ton URL Aiven par défaut (pour ton Mac)
+DATABASE_URL = os.getenv("DATABASE_URL", "mysql+pymysql://avnadmin:AVNS_mC88vnTwUWGWxZJwD5S@wacdo-mysql-db-wacdo-project.i.aivencloud.com:27384/defaultdb")
+# ------------------------
 
 # Configuration avec SSL (Obligatoire pour Aiven)
 engine = create_engine(
