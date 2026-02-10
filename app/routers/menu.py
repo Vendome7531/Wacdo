@@ -7,7 +7,6 @@ import shutil
 from app.database.database import get_db
 from app.models.user import UserModel
 from app.schemas.menu import MenuSchema, MenuDeleteResponse  
-# L'import de AvailabilityEnum a été supprimé ici
 from app.controllers import menu_controller
 from app.dependencies import admin_only
 
@@ -37,7 +36,6 @@ def create_menu(
     name: str = Form(...),
     description: str = Form(None),
     price: float = Form(...),
-    # Changé ici : utilisation de bool au lieu de l'Enum
     is_available: bool = Form(True),
     product_ids: Optional[str] = Form(None, description="IDs des produits séparés par une virgule (ex: 1,2,3)"),
     image: Optional[UploadFile] = File(None),
@@ -59,7 +57,7 @@ def create_menu(
         description=description, 
         price=price, 
         image_url=image_url,
-        is_available=is_available, # C'est maintenant un booléen
+        is_available=is_available, 
         product_ids=product_ids
     )
 
@@ -70,7 +68,6 @@ def update_menu(
     name: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     price: Optional[float] = Form(None),
-    # Changé ici : utilisation de bool optionnel
     is_available: Optional[bool] = Form(None),
     product_ids: Optional[str] = Form(None, description="Nouveaux IDs produits séparés par une virgule (ex: 4,5,6)"),
     image: Optional[UploadFile] = File(None),

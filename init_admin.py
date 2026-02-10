@@ -1,7 +1,7 @@
 import sys
 import os
 
-# On s'assure que le script peut trouver le dossier 'app'
+
 sys.path.append(os.getcwd())
 
 from sqlalchemy.orm import Session
@@ -12,7 +12,7 @@ from app.core.security import get_password_hash
 from app.models.user import UserModel, UserRole
 from app.models.order import OrderModel      
 from app.models.product import ProductModel
-from app.models.menu import MenuModel        # Ajouté pour éviter l'erreur de mapping
+from app.models.menu import MenuModel        
 
 def create_first_admin():
     # 1. On ouvre une connexion à la base MySQL

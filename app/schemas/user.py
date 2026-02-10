@@ -28,7 +28,7 @@ class UserResponse(BaseModel):
     role: str = Field(..., json_schema_extra={"example": "administrateur"})
     is_active: bool = Field(..., json_schema_extra={"example": True})
 
-    # Nouvelle syntaxe Pydantic V2 pour remplacer class Config
+  
     model_config = ConfigDict(from_attributes=True)
 
 # 5. Schémas pour la sécurité et les messages

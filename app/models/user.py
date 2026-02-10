@@ -23,5 +23,5 @@ class UserModel(Base):
     
     is_active = Column(Boolean, default=True) 
 
-    # Relation avec les commandes (assure-toi que OrderModel est bien défini ailleurs)
+    # Relation avec les commandes 
     orders = relationship("OrderModel", back_populates="user")

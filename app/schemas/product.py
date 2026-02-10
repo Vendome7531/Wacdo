@@ -23,8 +23,7 @@ class ProductSchema(BaseModel):
     price: float = Field(..., json_schema_extra={"example": 5.99})
     is_available: bool
     image: Optional[str] = Field(None, json_schema_extra={"example": "uploads/bigmac.jpg"})
-
-    # CHANGEMENT ICI : Adieu class Config, bonjour model_config
+    
     model_config = ConfigDict(from_attributes=True)
 
 class ProductDeleteResponse(BaseModel):

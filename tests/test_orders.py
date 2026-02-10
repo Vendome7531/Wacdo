@@ -18,12 +18,11 @@ def test_order_workflow_complete(client, get_headers):
     # 2. Le cuisinier voit la commande dans sa liste
     res_list = client.get("/orders/", headers=h_cuisto)
     assert res_list.status_code == 200
-    # Vérifie que l'ID qu'on vient de créer est bien dans la liste
+    
     ids = [o["id"] for o in res_list.json()]
     assert order_id in ids
 
-    # 3. Changement de statut (si ta route /status est prête)
-    # On teste avec un bloc 'if' pour ne pas bloquer si la route n'existe pas encore
+    # 3. Changement de statut 
     res_status = client.patch(f"/orders/{order_id}/status", data={"status": "prête"}, headers=h_cuisto)
     if res_status.status_code != 404:
         assert res_status.status_code == 200
@@ -35,7 +34,6 @@ def test_order_price_integrity(client, get_headers):
     h_accueil = get_headers("accueil_01")
     
     # 1. Récupération des prix individuels pour comparaison
-    # On suppose que les produits 1 et 2 existent en base
     try:
         p1 = client.get("/products/1", headers=h_accueil).json()
         p2 = client.get("/products/2", headers=h_accueil).json()

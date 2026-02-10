@@ -6,7 +6,7 @@ import shutil
 
 from app.database.database import get_db
 from app.models.user import UserModel
-from app.schemas.product import ProductSchema, ProductDeleteResponse  # AvailabilityEnum supprimé
+from app.schemas.product import ProductSchema, ProductDeleteResponse  
 from app.controllers import product_controller
 from app.dependencies import admin_only
 
@@ -35,7 +35,6 @@ def create_product(
     name: str = Form(...),
     description: str = Form(None),
     price: float = Form(...),
-    # Remplacé : l'Enum devient un booléen
     is_available: bool = Form(True),
     image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
@@ -66,7 +65,6 @@ def update_product(
     name: Optional[str] = Form(None),
     description: Optional[str] = Form(None),
     price: Optional[float] = Form(None),
-    # Remplacé : l'Enum devient un booléen optionnel
     is_available: Optional[bool] = Form(None),
     image: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),

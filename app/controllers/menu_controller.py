@@ -4,7 +4,6 @@ from app.models.product import ProductModel
 
 def get_all_menus(db: Session):
     """Récupère tous les menus."""
-    # On renvoie les objets tels quels, SQLAlchemy gère le booléen (0/1)
     return db.query(MenuModel).all()
 
 def get_menu_by_id(db: Session, menu_id: int):
@@ -13,7 +12,6 @@ def get_menu_by_id(db: Session, menu_id: int):
 
 def create_new_menu(db: Session, name, description, price, image_url, is_available, product_ids=None):
     """Crée un menu."""
-    # is_available est déjà un booléen venant du router
     new_menu = MenuModel(
         name=name,
         description=description,

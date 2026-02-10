@@ -11,7 +11,7 @@ def test_product_lifecycle_admin(client, get_headers):
         "price": 9.99,
         "is_available": True
     }
-    # Si ton API utilise Form(...), on envoie en 'data', sinon en 'json'
+    
     response = client.post("/products/", data=new_prod, headers=h_admin)
     assert response.status_code == 201
     product_id = response.json()["id"]
