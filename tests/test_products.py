@@ -2,7 +2,7 @@ import pytest
 
 def test_product_lifecycle_admin(client, get_headers):
     """Vérifie qu'un admin peut créer et modifier un produit"""
-    h_admin = get_headers("admin_01")
+    h_admin = get_headers("administrateur01")
     
     # 1. Création d'un nouveau produit
     new_prod = {
@@ -24,7 +24,7 @@ def test_product_lifecycle_admin(client, get_headers):
 
 def test_product_consultation_accueil(client, get_headers):
     """Vérifie que l'accueil peut voir mais pas modifier"""
-    h_accueil = get_headers("accueil_01")
+    h_accueil = get_headers("accueil01")
     
     # 1. Lecture : OK
     res_get = client.get("/products/", headers=h_accueil)
@@ -37,7 +37,7 @@ def test_product_consultation_accueil(client, get_headers):
 
 def test_menu_integrity_calculation(client, get_headers):
     """Optionnel : Vérifie qu'un menu calcule bien son prix réduit (si implémenté)"""
-    h_accueil = get_headers("accueil_01")
+    h_accueil = get_headers("accueil01")
     
     res = client.get("/menus/", headers=h_accueil)
     if res.status_code == 200 and len(res.json()) > 0:

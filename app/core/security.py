@@ -1,4 +1,4 @@
-import bcrypt
+import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import jwt
@@ -9,18 +9,15 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 def verify_password(plain_password: str, hashed_password: str):
-    """Vérifie le mot de passe en utilisant bcrypt directement."""
-    # On transforme le texte en bytes pour bcrypt
-    password_byte = plain_password.encode('utf-8')
-    hashed_byte = hashed_password.encode('utf-8')
-    return bcrypt.checkpw(password_byte, hashed_byte)
+    """Vérifie le mot de passe en utilisant SHA256 (compatible Python 3.13)."""
+    # On hache le mot de passe saisi par l'utilisateur
+    current_hash = hashlib.sha256(plain_password.encode('utf-8')).hexdigest()
+    # On compare avec ce qui est stocké en base
+    return current_hash == hashed_password
 
 def get_password_hash(password: str):
-    """Hache le mot de passe en utilisant bcrypt directement."""
-    pwd_bytes = password.encode('utf-8')
-    salt = bcrypt.gensalt()
-    hashed_password = bcrypt.hashpw(pwd_bytes, salt)
-    return hashed_password.decode('utf-8')
+    """Génère un hash SHA256 (compatible Python 3.13)."""
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """Génère le token JWT (inchangé)."""
